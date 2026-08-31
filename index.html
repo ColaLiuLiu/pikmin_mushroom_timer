@@ -180,6 +180,66 @@
     opacity: 0.9;
   }
 
+  .empty-hint {
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  .record-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .record-row:last-child {
+    border-bottom: none;
+  }
+
+  .record-index {
+    flex: 0 0 auto;
+    min-width: 28px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--green-dark);
+  }
+
+  .record-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .record-time {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .record-text {
+    font-size: 0.8rem;
+    color: var(--muted);
+    word-break: break-word;
+  }
+
+  .record-delete {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .record-delete:hover {
+    background: var(--green-pale);
+    color: var(--green-dark);
+    border-color: var(--green);
+  }
+
   footer {
     text-align: center;
     color: var(--muted);
@@ -222,7 +282,7 @@
   </div>
 
   <div class="card">
-    <h2><span class="dot red"></span>剩餘時間</h2>
+    <h2><span class="dot red"></span>蘑菇剩餘時間</h2>
     <div class="duration-grid">
       <div class="field">
         <label for="days">日</label>
@@ -248,6 +308,20 @@
     <div class="end-datetime" id="result">請輸入日期與時間</div>
   </div>
 
+  <div class="card">
+    <h2><span class="dot blue"></span>備註並儲存</h2>
+    <div class="field">
+      <label for="noteInput">備註文字</label>
+      <input type="text" id="noteInput" placeholder="例如：紅隊 / 第3關卡">
+    </div>
+    <button class="now-btn" id="saveBtn">儲存結束時間與備註</button>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot red"></span>已儲存記錄</h2>
+    <div id="savedList"></div>
+  </div>
+
   <footer>Pikmin Mushroom Battle Timer</footer>
 </div>
 
@@ -262,6 +336,12 @@
   const secondsInput = document.getElementById('seconds');
   const resultEl = document.getElementById('result');
   const nowBtn = document.getElementById('nowBtn');
+  const noteInput = document.getElementById('noteInput');
+  const saveBtn = document.getElementById('saveBtn');
+  const savedListEl = document.getElementById('savedList');
+
+  const STORAGE_KEY = 'pikminMushroomRecords';
+  let currentEndDate = null;
 
   const numInputs = [
     currentHourInput, currentMinuteInput, currentSecondInput,
@@ -287,8 +367,15 @@
 
   const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
 
+  function formatDateTime(d) {
+    const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 (${weekdayNames[d.getDay()]})`;
+    const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    return { dateStr, timeStr };
+  }
+
   function updateResult() {
     if (!dateInput.value) {
+      currentEndDate = null;
       resultEl.textContent = '請輸入日期與時間';
       return;
     }
@@ -300,6 +387,7 @@
     const start = new Date(`${dateInput.value}T${timeString}`);
 
     if (isNaN(start.getTime())) {
+      currentEndDate = null;
       resultEl.textContent = '日期時間格式錯誤';
       return;
     }
@@ -311,11 +399,67 @@
 
     const totalMs = (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
     const end = new Date(start.getTime() + totalMs);
+    currentEndDate = end;
 
-    const dateStr = `${end.getFullYear()}年${end.getMonth() + 1}月${end.getDate()}日 (${weekdayNames[end.getDay()]})`;
-    const timeStr = `${pad(end.getHours())}:${pad(end.getMinutes())}:${pad(end.getSeconds())}`;
-
+    const { dateStr, timeStr } = formatDateTime(end);
     resultEl.innerHTML = `${dateStr}<small>${timeStr}</small>`;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function loadRecords() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveRecords(records) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  }
+
+  function renderRecords() {
+    const records = loadRecords();
+
+    if (records.length === 0) {
+      savedListEl.innerHTML = '<div class="empty-hint">尚無儲存的記錄</div>';
+      return;
+    }
+
+    savedListEl.innerHTML = records.map((record, index) => {
+      const { dateStr, timeStr } = formatDateTime(new Date(record.endTime));
+      const noteHtml = record.text
+        ? escapeHtml(record.text)
+        : '（無備註）';
+      return `
+        <div class="record-row">
+          <span class="record-index">#${index + 1}</span>
+          <div class="record-info">
+            <div class="record-time">${dateStr} ${timeStr}</div>
+            <div class="record-text">${noteHtml}</div>
+          </div>
+          <button class="record-delete" data-index="${index}" title="刪除">×</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function saveCurrentResult() {
+    if (!currentEndDate) return;
+    const records = loadRecords();
+    records.push({
+      endTime: currentEndDate.toISOString(),
+      text: noteInput.value.trim(),
+    });
+    saveRecords(records);
+    noteInput.value = '';
+    renderRecords();
   }
 
   numInputs.forEach((input) => {
@@ -327,8 +471,20 @@
 
   dateInput.addEventListener('input', updateResult);
   nowBtn.addEventListener('click', setToNow);
+  saveBtn.addEventListener('click', saveCurrentResult);
+
+  savedListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.record-delete');
+    if (!btn) return;
+    const index = parseInt(btn.dataset.index, 10);
+    const records = loadRecords();
+    records.splice(index, 1);
+    saveRecords(records);
+    renderRecords();
+  });
 
   setToNow();
+  renderRecords();
 </script>
 </body>
 </html>
