@@ -131,6 +131,10 @@
     gap: 10px;
   }
 
+  .time-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   .now-btn {
     margin-top: 12px;
     width: 100%;
@@ -197,8 +201,21 @@
         <input type="date" id="currentDate">
       </div>
       <div class="field">
-        <label for="currentTime">目前時間</label>
-        <input type="time" id="currentTime" step="1">
+        <label>目前時間（24小時制）</label>
+        <div class="duration-grid time-grid">
+          <div class="field">
+            <label for="currentHour">時</label>
+            <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="currentHour" value="0" maxlength="2">
+          </div>
+          <div class="field">
+            <label for="currentMinute">分</label>
+            <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="currentMinute" value="0" maxlength="2">
+          </div>
+          <div class="field">
+            <label for="currentSecond">秒</label>
+            <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="currentSecond" value="0" maxlength="2">
+          </div>
+        </div>
       </div>
     </div>
     <button class="now-btn" id="nowBtn">使用現在的日期與時間</button>
@@ -209,19 +226,19 @@
     <div class="duration-grid">
       <div class="field">
         <label for="days">日</label>
-        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="days" value="0" maxlength="4">
+        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="days" placeholder="0" maxlength="4">
       </div>
       <div class="field">
         <label for="hours">時</label>
-        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="hours" value="0" maxlength="2">
+        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="hours" placeholder="0" maxlength="2">
       </div>
       <div class="field">
         <label for="minutes">分</label>
-        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="minutes" value="0" maxlength="2">
+        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="minutes" placeholder="0" maxlength="2">
       </div>
       <div class="field">
         <label for="seconds">秒</label>
-        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="seconds" value="0" maxlength="2">
+        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="seconds" placeholder="0" maxlength="2">
       </div>
     </div>
   </div>
@@ -236,7 +253,9 @@
 
 <script>
   const dateInput = document.getElementById('currentDate');
-  const timeInput = document.getElementById('currentTime');
+  const currentHourInput = document.getElementById('currentHour');
+  const currentMinuteInput = document.getElementById('currentMinute');
+  const currentSecondInput = document.getElementById('currentSecond');
   const daysInput = document.getElementById('days');
   const hoursInput = document.getElementById('hours');
   const minutesInput = document.getElementById('minutes');
@@ -244,7 +263,10 @@
   const resultEl = document.getElementById('result');
   const nowBtn = document.getElementById('nowBtn');
 
-  const numInputs = [daysInput, hoursInput, minutesInput, secondsInput];
+  const numInputs = [
+    currentHourInput, currentMinuteInput, currentSecondInput,
+    daysInput, hoursInput, minutesInput, secondsInput,
+  ];
 
   function sanitizeNumeric(input) {
     input.value = input.value.replace(/[^0-9]/g, '');
@@ -257,20 +279,24 @@
   function setToNow() {
     const now = new Date();
     dateInput.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-    timeInput.value = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    currentHourInput.value = now.getHours();
+    currentMinuteInput.value = now.getMinutes();
+    currentSecondInput.value = now.getSeconds();
     updateResult();
   }
 
   const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
 
   function updateResult() {
-    if (!dateInput.value || !timeInput.value) {
+    if (!dateInput.value) {
       resultEl.textContent = '請輸入日期與時間';
       return;
     }
 
-    const timeParts = timeInput.value.split(':');
-    const timeString = timeParts.length === 2 ? `${timeInput.value}:00` : timeInput.value;
+    const currentHour = parseInt(currentHourInput.value, 10) || 0;
+    const currentMinute = parseInt(currentMinuteInput.value, 10) || 0;
+    const currentSecond = parseInt(currentSecondInput.value, 10) || 0;
+    const timeString = `${pad(currentHour)}:${pad(currentMinute)}:${pad(currentSecond)}`;
     const start = new Date(`${dateInput.value}T${timeString}`);
 
     if (isNaN(start.getTime())) {
@@ -300,7 +326,6 @@
   });
 
   dateInput.addEventListener('input', updateResult);
-  timeInput.addEventListener('input', updateResult);
   nowBtn.addEventListener('click', setToNow);
 
   setToNow();
