@@ -165,11 +165,24 @@
   }
   .danger-btn:hover { background: #c9433f; }
 
+  .success-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: var(--green);
+    color: #fff;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .success-btn:hover { background: var(--green-dark); }
+
   .record-actions {
     display: flex;
     gap: 8px;
   }
-  .record-actions .now-btn,
+  .record-actions .success-btn,
   .record-actions .danger-btn {
     width: auto;
     flex: 1;
@@ -414,7 +427,7 @@
     <div id="savedList"></div>
   </div>
   <div class="record-actions">
-    <button class="now-btn" id="exportBtn" hidden>導出CSV</button>
+    <button class="success-btn" id="exportBtn" hidden>匯出CSV</button>
     <button class="danger-btn" id="clearAllBtn" hidden>全部刪除</button>
   </div>
   </div>
@@ -609,7 +622,7 @@
   });
 
   clearAllBtn.addEventListener('click', () => {
-    if (!confirm('確定要刪除全部已儲存的記錄嗎？此動作無法復原。')) return;
+    if (!confirm('確定要刪除全部的記錄嗎？此動作無法復原！')) return;
     saveRecords([]);
     renderRecords();
   });
