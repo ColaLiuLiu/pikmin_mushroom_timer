@@ -545,14 +545,14 @@
         : '';
       return `
         <div class="record-row">
+          <div class="record-move">
+            <button class="move-btn" data-index="${index}" data-dir="-1" title="上移" ${index === 0 ? 'disabled' : ''}>▲</button>
+            <button class="move-btn" data-index="${index}" data-dir="1" title="下移" ${index === records.length - 1 ? 'disabled' : ''}>▼</button>
+          </div>
           <span class="record-index">#${index + 1}</span>
           <div class="record-info">
             <div class="record-time">${dateStr} ${timeStr}</div>
             <div class="record-text">${noteHtml}</div>
-          </div>
-          <div class="record-move">
-            <button class="move-btn" data-index="${index}" data-dir="-1" title="上移" ${index === 0 ? 'disabled' : ''}>▲</button>
-            <button class="move-btn" data-index="${index}" data-dir="1" title="下移" ${index === records.length - 1 ? 'disabled' : ''}>▼</button>
           </div>
           <button class="record-delete" data-index="${index}" title="刪除">×</button>
         </div>
