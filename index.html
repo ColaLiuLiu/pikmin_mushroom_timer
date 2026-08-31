@@ -28,7 +28,7 @@
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 32px 16px;
+    padding: 20px 16px 84px;
   }
 
   .container {
@@ -47,21 +47,21 @@
     text-align: center;
     color: var(--muted);
     font-size: 0.9rem;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
 
   .card {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 16px;
+    margin-bottom: 14px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
 
   .card h2 {
     font-size: 1rem;
-    margin: 0 0 14px;
+    margin: 0 0 10px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -81,7 +81,7 @@
   .row {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
   .field {
@@ -89,7 +89,7 @@
     min-width: 110px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
   }
 
   .duration-grid .field {
@@ -119,6 +119,10 @@
     font-variant-numeric: tabular-nums;
   }
 
+  #noteInput {
+    padding: 12px 12px;
+  }
+
   input:focus {
     outline: none;
     border-color: var(--green);
@@ -136,7 +140,7 @@
   }
 
   .now-btn {
-    margin-top: 12px;
+    margin-top: 8px;
     width: 100%;
     padding: 10px;
     border: 1px solid var(--green);
@@ -244,7 +248,39 @@
     text-align: center;
     color: var(--muted);
     font-size: 0.75rem;
-    margin-top: 8px;
+    margin-top: 4px;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  .tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+    z-index: 10;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .tab-btn.active {
+    color: var(--green-dark);
+    font-weight: 700;
   }
 </style>
 </head>
@@ -253,6 +289,7 @@
   <h1>🍄 皮克敏蘑菇戰鬥計時器</h1>
   <div class="subtitle">輸入目前日期時間與剩餘時間，即時算出戰鬥結束時刻</div>
 
+  <div id="tab-timer">
   <div class="card">
     <h2><span class="dot blue"></span>目前日期與時間</h2>
     <div class="row">
@@ -312,18 +349,26 @@
     <h2><span class="dot blue"></span>備註並儲存</h2>
     <div class="field">
       <label for="noteInput">備註文字</label>
-      <input type="text" id="noteInput" placeholder="例如：紅隊 / 第3關卡">
+      <input type="text" id="noteInput" placeholder="例如：大白 / 日本大美菇">
     </div>
     <button class="now-btn" id="saveBtn">儲存結束時間與備註</button>
   </div>
+  </div>
 
+  <div id="tab-records" hidden>
   <div class="card">
     <h2><span class="dot red"></span>已儲存記錄</h2>
     <div id="savedList"></div>
   </div>
+  </div>
 
   <footer>Pikmin Mushroom Battle Timer</footer>
 </div>
+
+<nav class="tabbar">
+  <button class="tab-btn active" id="tabBtnTimer" data-tab="timer">🍄 計時器</button>
+  <button class="tab-btn" id="tabBtnRecords" data-tab="records">📋 儲存的紀錄</button>
+</nav>
 
 <script>
   const dateInput = document.getElementById('currentDate');
@@ -482,6 +527,22 @@
     saveRecords(records);
     renderRecords();
   });
+
+  const tabTimerPanel = document.getElementById('tab-timer');
+  const tabRecordsPanel = document.getElementById('tab-records');
+  const tabBtnTimer = document.getElementById('tabBtnTimer');
+  const tabBtnRecords = document.getElementById('tabBtnRecords');
+
+  function switchTab(tab) {
+    const isTimer = tab === 'timer';
+    tabTimerPanel.hidden = !isTimer;
+    tabRecordsPanel.hidden = isTimer;
+    tabBtnTimer.classList.toggle('active', isTimer);
+    tabBtnRecords.classList.toggle('active', !isTimer);
+  }
+
+  tabBtnTimer.addEventListener('click', () => switchTab('timer'));
+  tabBtnRecords.addEventListener('click', () => switchTab('records'));
 
   setToNow();
   renderRecords();
