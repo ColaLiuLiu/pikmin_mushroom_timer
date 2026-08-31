@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>皮克敏蘑菇戰鬥計時器</title>
+<style>
+  :root {
+    --red: #e63946;
+    --blue: #457b9d;
+    --yellow: #f4b400;
+    --purple: #6a4c93;
+    --bg: #fdf6e3;
+    --card-bg: #ffffff;
+    --text: #2b2b2b;
+    --muted: #6b6b6b;
+    --border: #e5ddc8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif;
+    background: linear-gradient(180deg, #fff8e7 0%, var(--bg) 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 520px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin: 0 0 4px;
+    color: var(--red);
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .card h2 {
+    font-size: 1rem;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot.red { background: var(--red); }
+  .dot.blue { background: var(--blue); }
+  .dot.yellow { background: var(--yellow); }
+  .dot.purple { background: var(--purple); }
+
+  .row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .field {
+    flex: 1;
+    min-width: 130px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  input[type="date"],
+  input[type="time"],
+  input.num {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    width: 100%;
+    background: #fffdf7;
+    color: var(--text);
+  }
+
+  input.num {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(69,123,157,0.15);
+  }
+
+  .duration-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .now-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--blue);
+    background: transparent;
+    color: var(--blue);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .now-btn:hover { background: rgba(69,123,157,0.08); }
+
+  .result-card {
+    background: linear-gradient(135deg, #6a4c93 0%, #457b9d 100%);
+    color: #fff;
+    text-align: center;
+    padding: 26px 20px;
+  }
+
+  .result-card .label {
+    font-size: 0.85rem;
+    opacity: 0.85;
+    margin-bottom: 8px;
+  }
+
+  .result-card .end-datetime {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.4;
+    word-break: keep-all;
+  }
+
+  .result-card .end-datetime small {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 400;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🍄 皮克敏蘑菇戰鬥計時器</h1>
+  <div class="subtitle">輸入目前日期時間與剩餘時間，即時算出戰鬥結束時刻</div>
+
+  <div class="card">
+    <h2><span class="dot blue"></span>目前日期與時間</h2>
+    <div class="row">
+      <div class="field">
+        <label for="currentDate">目前日期</label>
+        <input type="date" id="currentDate">
+      </div>
+      <div class="field">
+        <label for="currentTime">目前時間</label>
+        <input type="time" id="currentTime" step="1">
+      </div>
+    </div>
+    <button class="now-btn" id="nowBtn">使用現在的日期與時間</button>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot red"></span>剩餘時間</h2>
+    <div class="duration-grid">
+      <div class="field">
+        <label for="days">日</label>
+        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="days" value="0" maxlength="4">
+      </div>
+      <div class="field">
+        <label for="hours">時</label>
+        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="hours" value="0" maxlength="2">
+      </div>
+      <div class="field">
+        <label for="minutes">分</label>
+        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="minutes" value="0" maxlength="2">
+      </div>
+      <div class="field">
+        <label for="seconds">秒</label>
+        <input class="num" type="text" inputmode="numeric" pattern="[0-9]*" id="seconds" value="0" maxlength="2">
+      </div>
+    </div>
+  </div>
+
+  <div class="card result-card">
+    <div class="label">蘑菇戰鬥結束時間</div>
+    <div class="end-datetime" id="result">請輸入日期與時間</div>
+  </div>
+
+  <footer>Pikmin Mushroom Battle Timer</footer>
+</div>
+
+<script>
+  const dateInput = document.getElementById('currentDate');
+  const timeInput = document.getElementById('currentTime');
+  const daysInput = document.getElementById('days');
+  const hoursInput = document.getElementById('hours');
+  const minutesInput = document.getElementById('minutes');
+  const secondsInput = document.getElementById('seconds');
+  const resultEl = document.getElementById('result');
+  const nowBtn = document.getElementById('nowBtn');
+
+  const numInputs = [daysInput, hoursInput, minutesInput, secondsInput];
+
+  function sanitizeNumeric(input) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+  }
+
+  function pad(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function setToNow() {
+    const now = new Date();
+    dateInput.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    timeInput.value = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    updateResult();
+  }
+
+  const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
+
+  function updateResult() {
+    if (!dateInput.value || !timeInput.value) {
+      resultEl.textContent = '請輸入日期與時間';
+      return;
+    }
+
+    const timeParts = timeInput.value.split(':');
+    const timeString = timeParts.length === 2 ? `${timeInput.value}:00` : timeInput.value;
+    const start = new Date(`${dateInput.value}T${timeString}`);
+
+    if (isNaN(start.getTime())) {
+      resultEl.textContent = '日期時間格式錯誤';
+      return;
+    }
+
+    const days = parseInt(daysInput.value, 10) || 0;
+    const hours = parseInt(hoursInput.value, 10) || 0;
+    const minutes = parseInt(minutesInput.value, 10) || 0;
+    const seconds = parseInt(secondsInput.value, 10) || 0;
+
+    const totalMs = (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
+    const end = new Date(start.getTime() + totalMs);
+
+    const dateStr = `${end.getFullYear()}年${end.getMonth() + 1}月${end.getDate()}日 (${weekdayNames[end.getDay()]})`;
+    const timeStr = `${pad(end.getHours())}:${pad(end.getMinutes())}:${pad(end.getSeconds())}`;
+
+    resultEl.innerHTML = `${dateStr}<small>${timeStr}</small>`;
+  }
+
+  numInputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      sanitizeNumeric(input);
+      updateResult();
+    });
+  });
+
+  dateInput.addEventListener('input', updateResult);
+  timeInput.addEventListener('input', updateResult);
+  nowBtn.addEventListener('click', setToNow);
+
+  setToNow();
+</script>
+</body>
+</html>
