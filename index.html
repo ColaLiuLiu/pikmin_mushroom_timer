@@ -165,6 +165,18 @@
   }
   .danger-btn:hover { background: #c9433f; }
 
+  .record-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .record-actions .now-btn,
+  .record-actions .danger-btn {
+    width: auto;
+    flex: 1;
+    margin-top: 0;
+    padding: 12px;
+  }
+
   .result-card {
     background: linear-gradient(135deg, #a5d16a 0%, var(--green-dark) 100%);
     color: #fff;
@@ -255,6 +267,35 @@
     background: var(--green-pale);
     color: var(--green-dark);
     border-color: var(--green);
+  }
+
+  .record-move {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .move-btn {
+    width: 22px;
+    height: 17px;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 4px;
+    font-size: 0.6rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .move-btn:hover:not(:disabled) {
+    background: var(--green-pale);
+    color: var(--green-dark);
+    border-color: var(--green);
+  }
+  .move-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
   }
 
   footer {
@@ -372,7 +413,10 @@
     <h2><span class="dot red"></span>已儲存記錄</h2>
     <div id="savedList"></div>
   </div>
-  <button class="danger-btn" id="clearAllBtn" hidden>全部刪除</button>
+  <div class="record-actions">
+    <button class="now-btn" id="exportBtn" hidden>導出CSV</button>
+    <button class="danger-btn" id="clearAllBtn" hidden>全部刪除</button>
+  </div>
   </div>
 
   <footer>Pikmin Mushroom Battle Timer</footer>
@@ -398,6 +442,7 @@
   const saveBtn = document.getElementById('saveBtn');
   const savedListEl = document.getElementById('savedList');
   const clearAllBtn = document.getElementById('clearAllBtn');
+  const exportBtn = document.getElementById('exportBtn');
 
   const STORAGE_KEY = 'pikminMushroomRecords';
   let currentEndDate = null;
@@ -486,6 +531,7 @@
   function renderRecords() {
     const records = loadRecords();
     clearAllBtn.hidden = records.length === 0;
+    exportBtn.hidden = records.length === 0;
 
     if (records.length === 0) {
       savedListEl.innerHTML = '<div class="empty-hint">尚無儲存的記錄</div>';
@@ -496,13 +542,17 @@
       const { dateStr, timeStr } = formatDateTime(new Date(record.endTime));
       const noteHtml = record.text
         ? escapeHtml(record.text)
-        : '（無備註）';
+        : '';
       return `
         <div class="record-row">
           <span class="record-index">#${index + 1}</span>
           <div class="record-info">
             <div class="record-time">${dateStr} ${timeStr}</div>
             <div class="record-text">${noteHtml}</div>
+          </div>
+          <div class="record-move">
+            <button class="move-btn" data-index="${index}" data-dir="-1" title="上移" ${index === 0 ? 'disabled' : ''}>▲</button>
+            <button class="move-btn" data-index="${index}" data-dir="1" title="下移" ${index === records.length - 1 ? 'disabled' : ''}>▼</button>
           </div>
           <button class="record-delete" data-index="${index}" title="刪除">×</button>
         </div>
@@ -533,7 +583,22 @@
   nowBtn.addEventListener('click', setToNow);
   saveBtn.addEventListener('click', saveCurrentResult);
 
+  function moveRecord(index, dir) {
+    const records = loadRecords();
+    const newIndex = index + dir;
+    if (newIndex < 0 || newIndex >= records.length) return;
+    [records[index], records[newIndex]] = [records[newIndex], records[index]];
+    saveRecords(records);
+    renderRecords();
+  }
+
   savedListEl.addEventListener('click', (e) => {
+    const moveBtn = e.target.closest('.move-btn');
+    if (moveBtn) {
+      moveRecord(parseInt(moveBtn.dataset.index, 10), parseInt(moveBtn.dataset.dir, 10));
+      return;
+    }
+
     const btn = e.target.closest('.record-delete');
     if (!btn) return;
     const index = parseInt(btn.dataset.index, 10);
@@ -548,6 +613,42 @@
     saveRecords([]);
     renderRecords();
   });
+
+  function csvEscape(value) {
+    const str = String(value);
+    if (/[",\r\n]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  function exportCsv() {
+    const records = loadRecords();
+    if (records.length === 0) return;
+
+    const rows = [['序號', '備註', '剩餘時間']];
+    records.forEach((record, index) => {
+      const { dateStr, timeStr } = formatDateTime(new Date(record.endTime));
+      rows.push([index + 1, record.text || '', `${dateStr} ${timeStr}`]);
+    });
+
+    const BOM = String.fromCharCode(0xFEFF);
+    const csvContent = BOM + rows.map((row) => row.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const now = new Date();
+    const fileDate = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `蘑菇計時器記錄_${fileDate}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  exportBtn.addEventListener('click', exportCsv);
 
   const tabTimerPanel = document.getElementById('tab-timer');
   const tabRecordsPanel = document.getElementById('tab-records');
