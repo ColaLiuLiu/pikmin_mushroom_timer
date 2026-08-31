@@ -152,6 +152,19 @@
   }
   .now-btn:hover { background: var(--green-pale); }
 
+  .danger-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #c96b63;
+    background: transparent;
+    color: #b5453c;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .danger-btn:hover { background: #fbe9e7; }
+
   .result-card {
     background: linear-gradient(135deg, #a5d16a 0%, var(--green-dark) 100%);
     color: #fff;
@@ -348,8 +361,7 @@
   <div class="card">
     <h2><span class="dot blue"></span>備註並儲存</h2>
     <div class="field">
-      <label for="noteInput">備註文字</label>
-      <input type="text" id="noteInput" placeholder="例如：大白 / 日本大美菇">
+      <input type="text" id="noteInput" placeholder="備註文字，例如：大白 / 日本大美菇">
     </div>
     <button class="now-btn" id="saveBtn">儲存結束時間與備註</button>
   </div>
@@ -359,6 +371,7 @@
   <div class="card">
     <h2><span class="dot red"></span>已儲存記錄</h2>
     <div id="savedList"></div>
+    <button class="danger-btn" id="clearAllBtn" hidden>全部刪除</button>
   </div>
   </div>
 
@@ -384,6 +397,7 @@
   const noteInput = document.getElementById('noteInput');
   const saveBtn = document.getElementById('saveBtn');
   const savedListEl = document.getElementById('savedList');
+  const clearAllBtn = document.getElementById('clearAllBtn');
 
   const STORAGE_KEY = 'pikminMushroomRecords';
   let currentEndDate = null;
@@ -471,6 +485,7 @@
 
   function renderRecords() {
     const records = loadRecords();
+    clearAllBtn.hidden = records.length === 0;
 
     if (records.length === 0) {
       savedListEl.innerHTML = '<div class="empty-hint">尚無儲存的記錄</div>';
@@ -525,6 +540,12 @@
     const records = loadRecords();
     records.splice(index, 1);
     saveRecords(records);
+    renderRecords();
+  });
+
+  clearAllBtn.addEventListener('click', () => {
+    if (!confirm('確定要刪除全部已儲存的記錄嗎？此動作無法復原。')) return;
+    saveRecords([]);
     renderRecords();
   });
 
