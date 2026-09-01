@@ -610,6 +610,39 @@
     <div class="filter-row">
       <button class="filter-toggle-btn" id="filterToggleBtn" title="篩選備註">🔍</button>
       <input type="text" id="filterInput" class="filter-input" placeholder="輸入文字篩選備註" hidden>
+      <button class="filter-toggle-btn" id="filterQuickToggleBtn" title="快速輸入" hidden>📌</button>
+    </div>
+    <div class="quick-input-panel" id="filterQuickPanel" hidden>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-bold" data-text="巨">巨</button>
+        <button type="button" class="quick-tag tag-bold" data-text="大">大</button>
+        <button type="button" class="quick-tag" data-text="一般">一般</button>
+        <button type="button" class="quick-tag" data-text="小">小</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-bold" data-text="活動">活動</button>
+        <button type="button" class="quick-tag tag-gray" data-text="水晶">水晶</button>
+        <button type="button" class="quick-tag tag-gray" data-text="毒">毒</button>
+        <button type="button" class="quick-tag tag-red" data-text="火">火</button>
+        <button type="button" class="quick-tag tag-yellow" data-text="電">電</button>
+        <button type="button" class="quick-tag tag-blue" data-text="水">水</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-gray" data-text="白">白</button>
+        <button type="button" class="quick-tag tag-gray" data-text="灰">灰</button>
+        <button type="button" class="quick-tag tag-pink" data-text="粉紅">粉</button>
+        <button type="button" class="quick-tag tag-red" data-text="紅">紅</button>
+        <button type="button" class="quick-tag tag-yellow" data-text="黃">黃</button>
+        <button type="button" class="quick-tag tag-blue" data-text="藍">藍</button>
+        <button type="button" class="quick-tag tag-purple" data-text="紫">紫</button>
+        <button type="button" class="quick-tag tag-cyan" data-text="冰藍">冰</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-skin" data-text="菇">菇</button>
+        <button type="button" class="quick-tag" data-text=" ">空白鍵</button>
+        <button type="button" class="quick-tag" data-text="-">減號</button>
+        <button type="button" class="quick-tag tag-clear" data-action="clear">清除</button>
+      </div>
     </div>
     <div id="savedList"></div>
   </div>
@@ -651,6 +684,8 @@
   const sortByEndTimeBtn = document.getElementById('sortByEndTimeBtn');
   const filterToggleBtn = document.getElementById('filterToggleBtn');
   const filterInput = document.getElementById('filterInput');
+  const filterQuickToggleBtn = document.getElementById('filterQuickToggleBtn');
+  const filterQuickPanel = document.getElementById('filterQuickPanel');
   const notifyRecordsBtn = document.getElementById('notifyRecordsBtn');
   const notifyRecordsHint = document.getElementById('notifyRecordsHint');
 
@@ -836,6 +871,9 @@
     if (isShowing) {
       filterInput.hidden = true;
       filterToggleBtn.classList.remove('active');
+      filterQuickToggleBtn.hidden = true;
+      filterQuickToggleBtn.classList.remove('active');
+      filterQuickPanel.hidden = true;
       if (filterInput.value) {
         filterInput.value = '';
         renderRecords();
@@ -843,11 +881,28 @@
     } else {
       filterInput.hidden = false;
       filterToggleBtn.classList.add('active');
+      filterQuickToggleBtn.hidden = false;
       filterInput.focus();
     }
   });
 
   filterInput.addEventListener('input', renderRecords);
+
+  filterQuickToggleBtn.addEventListener('click', () => {
+    filterQuickPanel.hidden = !filterQuickPanel.hidden;
+    filterQuickToggleBtn.classList.toggle('active', !filterQuickPanel.hidden);
+  });
+
+  filterQuickPanel.addEventListener('click', (e) => {
+    const btn = e.target.closest('.quick-tag');
+    if (!btn) return;
+    if (btn.dataset.action === 'clear') {
+      filterInput.value = '';
+    } else {
+      insertAtCursor(filterInput, btn.dataset.text);
+    }
+    renderRecords();
+  });
 
   function moveRecord(index, dir) {
     const records = loadRecords();
