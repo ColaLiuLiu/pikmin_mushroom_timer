@@ -222,6 +222,14 @@
     opacity: 0.9;
   }
 
+  #sortByEndTimeBtn {
+    padding: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+
   #notifyRecordsBtn {
     width: 100%;
     margin-bottom: 4px;
@@ -258,6 +266,48 @@
     margin-bottom: 8px;
     height: 2.6em;
     overflow: hidden;
+  }
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .filter-toggle-btn {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .filter-toggle-btn:hover,
+  .filter-toggle-btn.active {
+    background: var(--green-pale);
+    color: var(--green-dark);
+    border-color: var(--green);
+  }
+
+  .filter-input {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    background: #fffdf7;
+    color: var(--text);
+  }
+  .filter-input:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(124,179,66,0.18);
   }
 
   .empty-hint {
@@ -462,8 +512,13 @@
   <div id="tab-records" hidden>
   <div class="card">
     <h2><span class="dot red"></span>已儲存記錄</h2>
+    <div class="filter-row">
+      <button class="filter-toggle-btn" id="filterToggleBtn" title="篩選備註">🔍</button>
+      <input type="text" id="filterInput" class="filter-input" placeholder="輸入文字篩選備註" hidden>
+    </div>
     <div id="savedList"></div>
   </div>
+  <button class="now-btn" id="sortByEndTimeBtn">⏱ 按結束時間排序</button>
   <button id="notifyRecordsBtn">🔔 開啟通知</button>
   <div class="records-notify-hint" id="notifyRecordsHint"></div>
   <div class="record-actions">
@@ -496,6 +551,9 @@
   const savedListEl = document.getElementById('savedList');
   const clearAllBtn = document.getElementById('clearAllBtn');
   const exportBtn = document.getElementById('exportBtn');
+  const sortByEndTimeBtn = document.getElementById('sortByEndTimeBtn');
+  const filterToggleBtn = document.getElementById('filterToggleBtn');
+  const filterInput = document.getElementById('filterInput');
   const notifyRecordsBtn = document.getElementById('notifyRecordsBtn');
   const notifyRecordsHint = document.getElementById('notifyRecordsHint');
 
@@ -594,7 +652,18 @@
       return;
     }
 
-    savedListEl.innerHTML = records.map((record, index) => {
+    const filterText = filterInput.value.trim().toLowerCase();
+    const visibleIndices = records
+      .map((record, index) => index)
+      .filter((index) => !filterText || (records[index].text || '').toLowerCase().includes(filterText));
+
+    if (visibleIndices.length === 0) {
+      savedListEl.innerHTML = '<div class="empty-hint">沒有符合篩選條件的記錄</div>';
+      return;
+    }
+
+    savedListEl.innerHTML = visibleIndices.map((index, displayPos) => {
+      const record = records[index];
       const { dateStr, timeStr } = formatDateTime(new Date(record.endTime));
       const noteHtml = record.text
         ? escapeHtml(record.text)
@@ -605,7 +674,7 @@
             <button class="move-btn" data-index="${index}" data-dir="-1" title="上移" ${index === 0 ? 'disabled' : ''}>▲</button>
             <button class="move-btn" data-index="${index}" data-dir="1" title="下移" ${index === records.length - 1 ? 'disabled' : ''}>▼</button>
           </div>
-          <span class="record-index">#${index + 1}</span>
+          <span class="record-index">#${displayPos + 1}</span>
           <div class="record-info">
             <div class="record-time">${dateStr} ${timeStr}</div>
             <div class="record-text">${noteHtml}</div>
@@ -639,6 +708,24 @@
   nowBtn.addEventListener('click', setToNow);
   saveBtn.addEventListener('click', saveCurrentResult);
 
+  filterToggleBtn.addEventListener('click', () => {
+    const isShowing = !filterInput.hidden;
+    if (isShowing) {
+      filterInput.hidden = true;
+      filterToggleBtn.classList.remove('active');
+      if (filterInput.value) {
+        filterInput.value = '';
+        renderRecords();
+      }
+    } else {
+      filterInput.hidden = false;
+      filterToggleBtn.classList.add('active');
+      filterInput.focus();
+    }
+  });
+
+  filterInput.addEventListener('input', renderRecords);
+
   function moveRecord(index, dir) {
     const records = loadRecords();
     const newIndex = index + dir;
@@ -660,6 +747,13 @@
     const index = parseInt(btn.dataset.index, 10);
     const records = loadRecords();
     records.splice(index, 1);
+    saveRecords(records);
+    renderRecords();
+  });
+
+  sortByEndTimeBtn.addEventListener('click', () => {
+    const records = loadRecords();
+    records.sort((a, b) => new Date(a.endTime).getTime() - new Date(b.endTime).getTime());
     saveRecords(records);
     renderRecords();
   });
