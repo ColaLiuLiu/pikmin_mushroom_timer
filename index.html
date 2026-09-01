@@ -574,10 +574,6 @@
         <button type="button" class="quick-tag tag-bold" data-text="大">大</button>
         <button type="button" class="quick-tag" data-text="一般">一般</button>
         <button type="button" class="quick-tag" data-text="小">小</button>
-        <button type="button" class="quick-tag tag-skin" data-text="菇">菇</button>
-        <button type="button" class="quick-tag" data-text=" ">空白鍵</button>
-        <button type="button" class="quick-tag" data-text="-">減號</button>
-        <button type="button" class="quick-tag tag-clear" data-action="clear">清除</button>
       </div>
       <div class="quick-input-row">
         <button type="button" class="quick-tag tag-bold" data-text="活動">活動</button>
@@ -590,12 +586,18 @@
       <div class="quick-input-row">
         <button type="button" class="quick-tag tag-gray" data-text="白">白</button>
         <button type="button" class="quick-tag tag-gray" data-text="灰">灰</button>
-        <button type="button" class="quick-tag tag-pink" data-text="粉紅">粉紅</button>
+        <button type="button" class="quick-tag tag-pink" data-text="粉紅">粉</button>
         <button type="button" class="quick-tag tag-red" data-text="紅">紅</button>
         <button type="button" class="quick-tag tag-yellow" data-text="黃">黃</button>
         <button type="button" class="quick-tag tag-blue" data-text="藍">藍</button>
         <button type="button" class="quick-tag tag-purple" data-text="紫">紫</button>
-        <button type="button" class="quick-tag tag-cyan" data-text="冰藍">冰藍</button>
+        <button type="button" class="quick-tag tag-cyan" data-text="冰藍">冰</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-skin" data-text="菇">菇</button>
+        <button type="button" class="quick-tag" data-text=" ">空白鍵</button>
+        <button type="button" class="quick-tag" data-text="-">減號</button>
+        <button type="button" class="quick-tag tag-clear" data-action="clear">清除</button>
       </div>
     </div>
     <button class="now-btn" id="saveBtn">儲存結束時間與備註</button>
@@ -808,11 +810,14 @@
   });
 
   function insertAtCursor(input, text) {
+    if (document.activeElement !== input) {
+      input.value += text;
+      return;
+    }
     const start = input.selectionStart ?? input.value.length;
     const end = input.selectionEnd ?? input.value.length;
     input.value = input.value.slice(0, start) + text + input.value.slice(end);
     const cursorPos = start + text.length;
-    input.focus();
     input.setSelectionRange(cursorPos, cursorPos);
   }
 
@@ -821,7 +826,6 @@
     if (!btn) return;
     if (btn.dataset.action === 'clear') {
       noteInput.value = '';
-      noteInput.focus();
       return;
     }
     insertAtCursor(noteInput, btn.dataset.text);
