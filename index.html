@@ -121,6 +121,7 @@
 
   #noteInput {
     padding: 9px 10px;
+    border-radius: 8px;
   }
 
   input:focus {
@@ -151,6 +152,67 @@
     cursor: pointer;
   }
   .now-btn:hover { background: var(--green-pale); }
+
+  .quick-input-panel {
+    background: var(--green-pale);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .quick-input-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .quick-tag {
+    padding: 5px 10px;
+    border: 1px solid var(--green);
+    background: #fff;
+    color: var(--green-dark);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .quick-tag:hover {
+    background: var(--green);
+    color: #fff;
+  }
+
+  .quick-tag.tag-gray { border-color: #6b6b6b; color: #4a4a4a; }
+  .quick-tag.tag-gray:hover { background: #6b6b6b; color: #fff; }
+
+  .quick-tag.tag-red { border-color: #e63946; color: #c1121f; }
+  .quick-tag.tag-red:hover { background: #e63946; color: #fff; }
+
+  .quick-tag.tag-yellow { border-color: #d4a300; color: #a67c00; }
+  .quick-tag.tag-yellow:hover { background: #d4a300; color: #fff; }
+
+  .quick-tag.tag-blue { border-color: #457b9d; color: #2f5f7a; }
+  .quick-tag.tag-blue:hover { background: #457b9d; color: #fff; }
+
+  .quick-tag.tag-pink { border-color: #e685a8; color: #c85a86; }
+  .quick-tag.tag-pink:hover { background: #e685a8; color: #fff; }
+
+  .quick-tag.tag-purple { border-color: #8e5fb0; color: #6f3f96; }
+  .quick-tag.tag-purple:hover { background: #8e5fb0; color: #fff; }
+
+  .quick-tag.tag-cyan { border-color: #3ec6e0; color: #1a95ac; }
+  .quick-tag.tag-cyan:hover { background: #3ec6e0; color: #fff; }
+
+  .quick-tag.tag-clear { border-color: #b5453c; color: #b5453c; }
+  .quick-tag.tag-clear:hover { background: #b5453c; color: #fff; }
+
+  .quick-tag.tag-bold { font-weight: 700; }
+
+  .quick-tag.tag-skin { border-color: #c98a54; color: #a8683a; }
+  .quick-tag.tag-skin:hover { background: #c98a54; color: #fff; }
 
   .danger-btn {
     width: 100%;
@@ -505,6 +567,37 @@
     <div class="field">
       <input type="text" id="noteInput" placeholder="備註文字，例如：大白 / 日本大美菇">
     </div>
+    <button class="now-btn" id="quickInputToggleBtn">📌 快速輸入關鍵字</button>
+    <div class="quick-input-panel" id="quickInputPanel" hidden>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-bold" data-text="巨">巨</button>
+        <button type="button" class="quick-tag tag-bold" data-text="大">大</button>
+        <button type="button" class="quick-tag" data-text="一般">一般</button>
+        <button type="button" class="quick-tag" data-text="小">小</button>
+        <button type="button" class="quick-tag tag-skin" data-text="菇">菇</button>
+        <button type="button" class="quick-tag" data-text=" ">空白鍵</button>
+        <button type="button" class="quick-tag" data-text="-">減號</button>
+        <button type="button" class="quick-tag tag-clear" data-action="clear">清除</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-bold" data-text="活動">活動</button>
+        <button type="button" class="quick-tag tag-gray" data-text="水晶">水晶</button>
+        <button type="button" class="quick-tag tag-gray" data-text="毒">毒</button>
+        <button type="button" class="quick-tag tag-red" data-text="火">火</button>
+        <button type="button" class="quick-tag tag-yellow" data-text="電">電</button>
+        <button type="button" class="quick-tag tag-blue" data-text="水">水</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-gray" data-text="白">白</button>
+        <button type="button" class="quick-tag tag-gray" data-text="灰">灰</button>
+        <button type="button" class="quick-tag tag-pink" data-text="粉紅">粉紅</button>
+        <button type="button" class="quick-tag tag-red" data-text="紅">紅</button>
+        <button type="button" class="quick-tag tag-yellow" data-text="黃">黃</button>
+        <button type="button" class="quick-tag tag-blue" data-text="藍">藍</button>
+        <button type="button" class="quick-tag tag-purple" data-text="紫">紫</button>
+        <button type="button" class="quick-tag tag-cyan" data-text="冰藍">冰藍</button>
+      </div>
+    </div>
     <button class="now-btn" id="saveBtn">儲存結束時間與備註</button>
   </div>
   </div>
@@ -547,6 +640,8 @@
   const resultEl = document.getElementById('result');
   const nowBtn = document.getElementById('nowBtn');
   const noteInput = document.getElementById('noteInput');
+  const quickInputToggleBtn = document.getElementById('quickInputToggleBtn');
+  const quickInputPanel = document.getElementById('quickInputPanel');
   const saveBtn = document.getElementById('saveBtn');
   const savedListEl = document.getElementById('savedList');
   const clearAllBtn = document.getElementById('clearAllBtn');
@@ -707,6 +802,30 @@
   dateInput.addEventListener('input', updateResult);
   nowBtn.addEventListener('click', setToNow);
   saveBtn.addEventListener('click', saveCurrentResult);
+
+  quickInputToggleBtn.addEventListener('click', () => {
+    quickInputPanel.hidden = !quickInputPanel.hidden;
+  });
+
+  function insertAtCursor(input, text) {
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    input.value = input.value.slice(0, start) + text + input.value.slice(end);
+    const cursorPos = start + text.length;
+    input.focus();
+    input.setSelectionRange(cursorPos, cursorPos);
+  }
+
+  quickInputPanel.addEventListener('click', (e) => {
+    const btn = e.target.closest('.quick-tag');
+    if (!btn) return;
+    if (btn.dataset.action === 'clear') {
+      noteInput.value = '';
+      noteInput.focus();
+      return;
+    }
+    insertAtCursor(noteInput, btn.dataset.text);
+  });
 
   filterToggleBtn.addEventListener('click', () => {
     const isShowing = !filterInput.hidden;
