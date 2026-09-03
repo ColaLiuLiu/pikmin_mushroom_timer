@@ -546,7 +546,7 @@
   }
 
   .modal-card {
-    width: min(96vw, 560px);
+    width: min(98vw, 560px);
     max-width: 560px;
     max-height: 85vh;
     overflow-y: auto;
@@ -1024,12 +1024,12 @@
             <button class="move-btn" data-index="${index}" data-dir="-1" title="上移" ${index === 0 ? 'disabled' : ''}>▲</button>
             <button class="move-btn" data-index="${index}" data-dir="1" title="下移" ${index === records.length - 1 ? 'disabled' : ''}>▼</button>
           </div>
-          <button class="edit-note-btn" data-index="${index}" title="編輯備註">✏️</button>
           <span class="record-index">#${displayPos + 1}</span>
           <div class="record-info">
             <div class="record-time">${dateStr} ${timeStr}</div>
             <div class="record-text">${noteHtml}</div>
           </div>
+          <button class="edit-note-btn" data-index="${index}" title="編輯備註">✐</button>
           <button class="record-delete" data-index="${index}" title="刪除">×</button>
         </div>
       `;
