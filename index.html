@@ -546,8 +546,8 @@
   }
 
   .modal-card {
-    width: 100%;
-    max-width: 480px;
+    width: min(96vw, 560px);
+    max-width: 560px;
     max-height: 85vh;
     overflow-y: auto;
     background: var(--card-bg);
@@ -1184,9 +1184,8 @@
     if (!record) return;
     editingRecordIndex = index;
     editNoteInput.value = record.text || '';
-    editQuickPanel.hidden = true;
+    editQuickPanel.hidden = false;
     editNoteOverlay.hidden = false;
-    editNoteInput.focus();
   }
 
   function closeEditNoteModal() {
