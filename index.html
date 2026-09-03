@@ -119,9 +119,14 @@
     font-variant-numeric: tabular-nums;
   }
 
-  #noteInput {
+  #noteInput,
+  #editNoteInput {
     padding: 9px 10px;
+    border: 1px solid var(--border);
     border-radius: 8px;
+    font-size: 0.95rem;
+    background: #fffdf7;
+    color: var(--text);
   }
 
   input:focus {
@@ -510,6 +515,64 @@
     cursor: default;
   }
 
+  .edit-note-btn {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .edit-note-btn:hover {
+    background: var(--green-pale);
+    color: var(--green-dark);
+    border-color: var(--green);
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 50;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 420px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+
+  .modal-title {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    color: var(--green-dark);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .modal-actions button {
+    flex: 1;
+    width: auto;
+    margin-top: 0;
+  }
+
   footer {
     text-align: center;
     color: var(--muted);
@@ -726,6 +789,54 @@
   <button class="tab-btn" id="tabBtnRecords" data-tab="records">📋 儲存的紀錄</button>
 </nav>
 
+<div class="modal-overlay" id="editNoteOverlay" hidden>
+  <div class="modal-card">
+    <h3 class="modal-title">編輯備註</h3>
+    <div class="field">
+      <input type="text" id="editNoteInput" placeholder="備註文字">
+    </div>
+    <button class="now-btn" id="editQuickToggleBtn">📌 快速輸入關鍵字</button>
+    <div class="quick-input-panel" id="editQuickPanel" hidden>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-bold" data-text="巨">巨</button>
+        <button type="button" class="quick-tag tag-bold" data-text="大">大</button>
+        <button type="button" class="quick-tag" data-text="一般">一般</button>
+        <button type="button" class="quick-tag" data-text="小">小</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-bold" data-text="活動">活動</button>
+        <button type="button" class="quick-tag tag-gray" data-text="水晶">水晶</button>
+        <button type="button" class="quick-tag tag-gray" data-text="毒">毒</button>
+        <button type="button" class="quick-tag tag-red" data-text="火">火</button>
+        <button type="button" class="quick-tag tag-yellow" data-text="電">電</button>
+        <button type="button" class="quick-tag tag-blue" data-text="水">水</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-gray" data-text="白">白</button>
+        <button type="button" class="quick-tag tag-gray" data-text="灰">灰</button>
+        <button type="button" class="quick-tag tag-pink" data-text="粉紅">粉</button>
+        <button type="button" class="quick-tag tag-red" data-text="紅">紅</button>
+        <button type="button" class="quick-tag tag-yellow" data-text="黃">黃</button>
+        <button type="button" class="quick-tag tag-blue" data-text="藍">藍</button>
+        <button type="button" class="quick-tag tag-purple" data-text="紫">紫</button>
+        <button type="button" class="quick-tag tag-cyan" data-text="冰藍">冰</button>
+      </div>
+      <div class="quick-input-row">
+        <button type="button" class="quick-tag tag-skin" data-text="菇">菇</button>
+        <button type="button" class="quick-tag tag-bright-green" data-text="花">花</button>
+        <button type="button" class="quick-tag" data-text=" ">空白鍵</button>
+        <button type="button" class="quick-tag" data-text="-">減號</button>
+        <button type="button" class="quick-tag tag-clear" data-action="clear">清除</button>
+      </div>
+      <div class="quick-input-row" id="editCustomTagsSlot"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="now-btn" id="editNoteCancelBtn">取消</button>
+      <button type="button" class="success-btn" id="editNoteSaveBtn">儲存</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const dateInput = document.getElementById('currentDate');
   const currentHourInput = document.getElementById('currentHour');
@@ -756,6 +867,13 @@
   const filterQuickPanel = document.getElementById('filterQuickPanel');
   const notifyRecordsBtn = document.getElementById('notifyRecordsBtn');
   const notifyRecordsHint = document.getElementById('notifyRecordsHint');
+  const editNoteOverlay = document.getElementById('editNoteOverlay');
+  const editNoteInput = document.getElementById('editNoteInput');
+  const editQuickToggleBtn = document.getElementById('editQuickToggleBtn');
+  const editQuickPanel = document.getElementById('editQuickPanel');
+  const editCustomTagsSlot = document.getElementById('editCustomTagsSlot');
+  const editNoteCancelBtn = document.getElementById('editNoteCancelBtn');
+  const editNoteSaveBtn = document.getElementById('editNoteSaveBtn');
 
   const STORAGE_KEY = 'pikminMushroomRecords';
   const NOTIFY_ENABLED_KEY = 'pikminNotifyRecordsEnabled';
@@ -858,6 +976,7 @@
       .join('');
     noteCustomTagsSlot.innerHTML = tagsHtml;
     filterCustomTagsSlot.innerHTML = tagsHtml;
+    editCustomTagsSlot.innerHTML = tagsHtml;
   }
 
   function loadRecords() {
@@ -905,6 +1024,7 @@
             <button class="move-btn" data-index="${index}" data-dir="-1" title="上移" ${index === 0 ? 'disabled' : ''}>▲</button>
             <button class="move-btn" data-index="${index}" data-dir="1" title="下移" ${index === records.length - 1 ? 'disabled' : ''}>▼</button>
           </div>
+          <button class="edit-note-btn" data-index="${index}" title="編輯備註">✏️</button>
           <span class="record-index">#${displayPos + 1}</span>
           <div class="record-info">
             <div class="record-time">${dateStr} ${timeStr}</div>
@@ -1041,6 +1161,12 @@
       return;
     }
 
+    const editBtn = e.target.closest('.edit-note-btn');
+    if (editBtn) {
+      openEditNoteModal(parseInt(editBtn.dataset.index, 10));
+      return;
+    }
+
     const btn = e.target.closest('.record-delete');
     if (!btn) return;
     const index = parseInt(btn.dataset.index, 10);
@@ -1048,6 +1174,55 @@
     records.splice(index, 1);
     saveRecords(records);
     renderRecords();
+  });
+
+  let editingRecordIndex = null;
+
+  function openEditNoteModal(index) {
+    const records = loadRecords();
+    const record = records[index];
+    if (!record) return;
+    editingRecordIndex = index;
+    editNoteInput.value = record.text || '';
+    editQuickPanel.hidden = true;
+    editNoteOverlay.hidden = false;
+    editNoteInput.focus();
+  }
+
+  function closeEditNoteModal() {
+    editNoteOverlay.hidden = true;
+    editingRecordIndex = null;
+  }
+
+  editNoteCancelBtn.addEventListener('click', closeEditNoteModal);
+
+  editNoteOverlay.addEventListener('click', (e) => {
+    if (e.target === editNoteOverlay) closeEditNoteModal();
+  });
+
+  editNoteSaveBtn.addEventListener('click', () => {
+    if (editingRecordIndex === null) return;
+    const records = loadRecords();
+    if (records[editingRecordIndex]) {
+      records[editingRecordIndex].text = editNoteInput.value.trim();
+      saveRecords(records);
+      renderRecords();
+    }
+    closeEditNoteModal();
+  });
+
+  editQuickToggleBtn.addEventListener('click', () => {
+    editQuickPanel.hidden = !editQuickPanel.hidden;
+  });
+
+  editQuickPanel.addEventListener('click', (e) => {
+    const btn = e.target.closest('.quick-tag');
+    if (!btn) return;
+    if (btn.dataset.action === 'clear') {
+      editNoteInput.value = '';
+      return;
+    }
+    insertAtCursor(editNoteInput, btn.dataset.text);
   });
 
   sortByEndTimeBtn.addEventListener('click', () => {
