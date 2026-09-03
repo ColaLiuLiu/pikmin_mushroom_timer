@@ -214,6 +214,55 @@
   .quick-tag.tag-skin { border-color: #c98a54; color: #a8683a; }
   .quick-tag.tag-skin:hover { background: #c98a54; color: #fff; }
 
+  .quick-tag.tag-bright-green { border-color: #4caf50; color: #2e9c32; }
+  .quick-tag.tag-bright-green:hover { background: #4caf50; color: #fff; }
+
+  #noteCustomTagsSlot {
+    display: contents;
+  }
+
+  .edit-tags-btn {
+    padding: 5px 10px;
+    border: 1px solid var(--muted);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .edit-tags-btn:hover {
+    background: var(--green-pale);
+    color: var(--green-dark);
+    border-color: var(--green);
+  }
+
+  .custom-tags-editor {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .custom-tag-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    background: #fffdf7;
+    color: var(--text);
+  }
+  .custom-tag-input:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(124,179,66,0.18);
+  }
+
   .danger-btn {
     width: 100%;
     padding: 12px;
@@ -595,10 +644,22 @@
       </div>
       <div class="quick-input-row">
         <button type="button" class="quick-tag tag-skin" data-text="菇">菇</button>
-        <button type="button" class="quick-tag" data-text="花">花</button>
+        <button type="button" class="quick-tag tag-bright-green" data-text="花">花</button>
         <button type="button" class="quick-tag" data-text=" ">空白鍵</button>
         <button type="button" class="quick-tag" data-text="-">減號</button>
         <button type="button" class="quick-tag tag-clear" data-action="clear">清除</button>
+      </div>
+      <div class="quick-input-row">
+        <span id="noteCustomTagsSlot"></span>
+        <button type="button" class="edit-tags-btn" id="editCustomTagsBtn">⚙️ 自訂關鍵字</button>
+      </div>
+      <div class="custom-tags-editor" id="customTagsEditor" hidden>
+        <input type="text" class="custom-tag-input" data-slot="0" maxlength="5" placeholder="自訂關鍵字 1">
+        <input type="text" class="custom-tag-input" data-slot="1" maxlength="5" placeholder="自訂關鍵字 2">
+        <input type="text" class="custom-tag-input" data-slot="2" maxlength="5" placeholder="自訂關鍵字 3">
+        <input type="text" class="custom-tag-input" data-slot="3" maxlength="5" placeholder="自訂關鍵字 4">
+        <input type="text" class="custom-tag-input" data-slot="4" maxlength="5" placeholder="自訂關鍵字 5">
+        <button type="button" class="now-btn" id="saveCustomTagsBtn">儲存自訂關鍵字</button>
       </div>
     </div>
     <button class="now-btn" id="saveBtn">儲存結束時間與備註</button>
@@ -644,6 +705,7 @@
         <button type="button" class="quick-tag" data-text="-">減號</button>
         <button type="button" class="quick-tag tag-clear" data-action="clear">清除</button>
       </div>
+      <div class="quick-input-row" id="filterCustomTagsSlot"></div>
     </div>
     <div id="savedList"></div>
   </div>
@@ -678,6 +740,11 @@
   const noteInput = document.getElementById('noteInput');
   const quickInputToggleBtn = document.getElementById('quickInputToggleBtn');
   const quickInputPanel = document.getElementById('quickInputPanel');
+  const noteCustomTagsSlot = document.getElementById('noteCustomTagsSlot');
+  const filterCustomTagsSlot = document.getElementById('filterCustomTagsSlot');
+  const editCustomTagsBtn = document.getElementById('editCustomTagsBtn');
+  const customTagsEditor = document.getElementById('customTagsEditor');
+  const saveCustomTagsBtn = document.getElementById('saveCustomTagsBtn');
   const saveBtn = document.getElementById('saveBtn');
   const savedListEl = document.getElementById('savedList');
   const clearAllBtn = document.getElementById('clearAllBtn');
@@ -692,6 +759,9 @@
 
   const STORAGE_KEY = 'pikminMushroomRecords';
   const NOTIFY_ENABLED_KEY = 'pikminNotifyRecordsEnabled';
+  const CUSTOM_TAGS_KEY = 'pikminCustomTags';
+  const CUSTOM_TAGS_MAX = 5;
+  const CUSTOM_TAG_MAX_LENGTH = 5;
   let currentEndDate = null;
 
   const numInputs = [
@@ -760,6 +830,34 @@
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  function loadCustomTags() {
+    let arr;
+    try {
+      arr = JSON.parse(localStorage.getItem(CUSTOM_TAGS_KEY));
+    } catch (e) {
+      arr = null;
+    }
+    if (!Array.isArray(arr)) arr = [];
+    const slots = [];
+    for (let i = 0; i < CUSTOM_TAGS_MAX; i++) {
+      slots.push(typeof arr[i] === 'string' ? arr[i].slice(0, CUSTOM_TAG_MAX_LENGTH) : '');
+    }
+    return slots;
+  }
+
+  function saveCustomTags(slots) {
+    localStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(slots.slice(0, CUSTOM_TAGS_MAX)));
+  }
+
+  function renderCustomTagButtons() {
+    const tagsHtml = loadCustomTags()
+      .filter((tag) => tag.trim() !== '')
+      .map((tag) => `<button type="button" class="quick-tag" data-text="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`)
+      .join('');
+    noteCustomTagsSlot.innerHTML = tagsHtml;
+    filterCustomTagsSlot.innerHTML = tagsHtml;
   }
 
   function loadRecords() {
@@ -844,6 +942,28 @@
   quickInputToggleBtn.addEventListener('click', () => {
     quickInputPanel.hidden = !quickInputPanel.hidden;
   });
+
+  editCustomTagsBtn.addEventListener('click', () => {
+    if (customTagsEditor.hidden) {
+      const slots = loadCustomTags();
+      customTagsEditor.querySelectorAll('.custom-tag-input').forEach((input) => {
+        input.value = slots[parseInt(input.dataset.slot, 10)];
+      });
+    }
+    customTagsEditor.hidden = !customTagsEditor.hidden;
+  });
+
+  saveCustomTagsBtn.addEventListener('click', () => {
+    const slots = [];
+    customTagsEditor.querySelectorAll('.custom-tag-input').forEach((input) => {
+      slots[parseInt(input.dataset.slot, 10)] = input.value.trim().slice(0, CUSTOM_TAG_MAX_LENGTH);
+    });
+    saveCustomTags(slots);
+    renderCustomTagButtons();
+    customTagsEditor.hidden = true;
+  });
+
+  renderCustomTagButtons();
 
   function insertAtCursor(input, text) {
     if (document.activeElement !== input) {
