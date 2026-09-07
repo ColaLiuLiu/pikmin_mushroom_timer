@@ -158,6 +158,17 @@
   }
   .now-btn:hover { background: var(--green-pale); }
 
+  #saveBtn {
+    margin-bottom: 8px;
+  }
+
+  .quick-input-label {
+    margin-top: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--green-dark);
+  }
+
   .quick-input-panel {
     background: var(--green-pale);
     border: 1px solid var(--border);
@@ -457,7 +468,7 @@
   .record-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
   }
@@ -467,7 +478,7 @@
 
   .record-index {
     flex: 0 0 auto;
-    min-width: 28px;
+    min-width: 12px;
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--green-dark);
@@ -695,13 +706,15 @@
     <div class="end-datetime" id="result">請輸入日期與時間</div>
   </div>
 
+  <button class="success-btn" id="saveBtn">💾 儲存結束時間與備註</button>
+
   <div class="card">
     <h2><span class="dot blue"></span>備註並儲存</h2>
     <div class="field">
       <input type="text" id="noteInput" placeholder="備註文字，例如：大白 / 日本大美菇">
     </div>
-    <button class="now-btn" id="quickInputToggleBtn">📌 快速輸入關鍵字</button>
-    <div class="quick-input-panel" id="quickInputPanel" hidden>
+    <div class="quick-input-label">📌 快速輸入關鍵字</div>
+    <div class="quick-input-panel" id="quickInputPanel">
       <div class="quick-input-row">
         <button type="button" class="quick-tag tag-bold" data-text="巨">巨</button>
         <button type="button" class="quick-tag tag-bold" data-text="大">大</button>
@@ -747,9 +760,8 @@
         <button type="button" class="now-btn" id="saveCustomTagsBtn">儲存自訂關鍵字</button>
       </div>
     </div>
-    <button class="now-btn" id="saveBtn">儲存結束時間與備註</button>
   </div>
-  <button class="success-btn" id="quickSproutBtn">🌱 皮克敏發芽快速計時</button>
+  <button class="now-btn" id="quickSproutBtn">🌱 皮克敏發芽快速計時</button>
   </div>
 
   <div id="tab-records" hidden>
@@ -876,7 +888,6 @@
   const resultEl = document.getElementById('result');
   const nowBtn = document.getElementById('nowBtn');
   const noteInput = document.getElementById('noteInput');
-  const quickInputToggleBtn = document.getElementById('quickInputToggleBtn');
   const quickInputPanel = document.getElementById('quickInputPanel');
   const noteCustomTagsSlot = document.getElementById('noteCustomTagsSlot');
   const filterCustomTagsSlot = document.getElementById('filterCustomTagsSlot');
@@ -1075,6 +1086,14 @@
     saveRecords(records);
     noteInput.value = '';
     renderRecords();
+
+    const originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = '✅ 已新增到儲存的紀錄';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1500);
   }
 
   numInputs.forEach((input) => {
@@ -1102,10 +1121,6 @@
       quickSproutBtn.textContent = originalText;
       quickSproutBtn.disabled = false;
     }, 1500);
-  });
-
-  quickInputToggleBtn.addEventListener('click', () => {
-    quickInputPanel.hidden = !quickInputPanel.hidden;
   });
 
   editCustomTagsBtn.addEventListener('click', () => {
