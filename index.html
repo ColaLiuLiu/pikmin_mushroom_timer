@@ -287,6 +287,21 @@
   }
   .danger-btn:hover { background: #c9433f; }
 
+  .danger-outline-btn {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 10px;
+    border: 1px solid #d9534f;
+    background: transparent;
+    color: #b5453c;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .danger-outline-btn:hover { background: #fbe9e7; }
+
   .success-btn {
     width: 100%;
     padding: 12px;
@@ -734,6 +749,7 @@
     </div>
     <button class="now-btn" id="saveBtn">儲存結束時間與備註</button>
   </div>
+  <button class="success-btn" id="quickSproutBtn">🌱 皮克敏發芽快速計時</button>
   </div>
 
   <div id="tab-records" hidden>
@@ -782,6 +798,7 @@
     <div id="savedList"></div>
   </div>
   <button class="now-btn" id="sortByEndTimeBtn">⏱ 按結束時間排序</button>
+  <button class="danger-outline-btn" id="deleteExpiredBtn">🗑 刪除已過期的計時</button>
   <button id="notifyRecordsBtn">🔔 開啟通知</button>
   <div class="records-notify-hint" id="notifyRecordsHint"></div>
   <div class="record-actions">
@@ -867,10 +884,12 @@
   const customTagsEditor = document.getElementById('customTagsEditor');
   const saveCustomTagsBtn = document.getElementById('saveCustomTagsBtn');
   const saveBtn = document.getElementById('saveBtn');
+  const quickSproutBtn = document.getElementById('quickSproutBtn');
   const savedListEl = document.getElementById('savedList');
   const clearAllBtn = document.getElementById('clearAllBtn');
   const exportBtn = document.getElementById('exportBtn');
   const sortByEndTimeBtn = document.getElementById('sortByEndTimeBtn');
+  const deleteExpiredBtn = document.getElementById('deleteExpiredBtn');
   const filterToggleBtn = document.getElementById('filterToggleBtn');
   const filterInput = document.getElementById('filterInput');
   const filterQuickToggleBtn = document.getElementById('filterQuickToggleBtn');
@@ -1069,6 +1088,22 @@
   nowBtn.addEventListener('click', setToNow);
   saveBtn.addEventListener('click', saveCurrentResult);
 
+  quickSproutBtn.addEventListener('click', () => {
+    const end = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    const records = loadRecords();
+    records.push({ endTime: end.toISOString(), text: '皮克敏發芽' });
+    saveRecords(records);
+    renderRecords();
+
+    const originalText = quickSproutBtn.textContent;
+    quickSproutBtn.disabled = true;
+    quickSproutBtn.textContent = '✅ 已新增到儲存的紀錄';
+    setTimeout(() => {
+      quickSproutBtn.textContent = originalText;
+      quickSproutBtn.disabled = false;
+    }, 1500);
+  });
+
   quickInputToggleBtn.addEventListener('click', () => {
     quickInputPanel.hidden = !quickInputPanel.hidden;
   });
@@ -1238,6 +1273,22 @@
     const records = loadRecords();
     records.sort((a, b) => new Date(a.endTime).getTime() - new Date(b.endTime).getTime());
     saveRecords(records);
+    renderRecords();
+  });
+
+  deleteExpiredBtn.addEventListener('click', () => {
+    const records = loadRecords();
+    const now = Date.now();
+    const remaining = records.filter((record) => new Date(record.endTime).getTime() > now);
+    const removedCount = records.length - remaining.length;
+
+    if (removedCount === 0) {
+      alert('目前沒有已過期的記錄。');
+      return;
+    }
+    if (!confirm(`確定要刪除 ${removedCount} 筆已過期的記錄嗎？此動作無法復原。`)) return;
+
+    saveRecords(remaining);
     renderRecords();
   });
 
